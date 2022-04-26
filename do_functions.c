@@ -7,6 +7,19 @@ Command cmd[] = {
         {0170000, 0060000, "add", HAS_DD | HAS_SS, do_add},
         {0177000, 0077000, "sob", HAS_R | HAS_NN, do_sob},
         {0077700, 0005000, "clr", HAS_DD, do_clr},
+        {0177777, 0000257, "ccc", 0, do_ccc},
+        {0177777, 0000277, "scc", 0, do_scc},
+        {0177777, 0000270, "sen", 0, do_sen},
+        {0177777, 0000250, "cln", 0, do_cln},
+        {0177777, 0000244, "clz", 0, do_clz},
+        {0177777, 0000242, "clv", 0, do_clv},
+        {0177777, 0000241, "clc", 0, do_clc},
+        {0177777, 0000250, "cln", 0, do_cln},
+        {0177777, 0000264, "sez", 0, do_sez},
+        {0177777, 0000262, "sev", 0, do_sev},
+        {0177777, 0000261, "sec", 0, do_sec},
+        {0177400, 0000400, "br", HAS_XX, do_br},
+        {0177400, 0001400, "beq", HAS_XX, do_beq},
         {0177777, 000000,  "halt", 0, do_halt},
         {0000000, 000000,  "unknown command", 0, do_nothing}
 };
@@ -77,16 +90,23 @@ Arg get_modereg(word w) {
     return res;
 }
 
+void set_C(int val) {
+    if ((val >> LEN_WORD) && (val > 0))
+        do_sec();
+    else
+        do_clc();
+}
+
 void set_NZ(word val) {
     if (val == 0) {
-        N_flag = 0;
-        Z_flag = 1;
-    } else if ((val >> 15) & 1) {
-        N_flag = 1;
-        Z_flag = 0;
-    } else if (val > 0) {
-        N_flag = 0;
-        Z_flag = 0;
+        do_cln();
+        do_sez();
+    } else if ((val >> (LEN_WORD - 1)) & 1) {
+        do_sen();
+        do_clz();
+    } else {
+        do_cln();
+        do_clz();
     }
 }
 
@@ -99,13 +119,17 @@ void do_halt() {
 void do_mov() {
     if (b_flag.val) {
         b_write(dd.adr, (byte) ss.val);
+        set_NZ(ss.val << LEN_BYTE);
     } else {
         w_write(dd.adr, ss.val);
+        set_NZ(ss.val);
     }
 }
 void do_add() {
     word res = dd.val + ss.val;
     w_write(dd.adr, res);
+    set_C((int) ss.val + (int) dd.val);
+    set_NZ(res);
 }
 
 void do_nothing() {
@@ -126,6 +150,63 @@ void do_clr() {
     } else {
         w_write(dd.adr, 0);
     }
+}
+
+void do_ccc() {
+    do_cln();
+    do_clz();
+    do_clv();
+    do_clz();
+}
+
+void do_scc() {
+    do_sen();
+    do_sez();
+    do_sev();
+    do_sec();
+}
+
+void do_cln() {
+    N_flag = 0;
+}
+
+void do_clz() {
+    Z_flag = 0;
+}
+
+void do_clv() {
+    V_flag = 0;
+}
+
+void do_clc() {
+    C_flag = 0;
+}
+
+void do_sen() {
+    N_flag = 1;
+}
+
+void do_sez() {
+    Z_flag = 1;
+}
+
+void do_sev() {
+    V_flag = 1;
+}
+
+void do_sec() {
+    C_flag = 1;
+}
+
+void do_br() {
+    if (xx.val >> (LEN_BYTE - 1))
+        xx.val = xx.val - 0400;
+    pc = pc + xx.val * 2;
+}
+
+void do_beq() {
+    if (Z_flag)
+        do_br();
 }
 
 void run() {
@@ -158,14 +239,16 @@ void run() {
         if (cmd[i].params & HAS_NN) {
             nn.val = (w & 077);
             w = w >> LEN_NN;
+            trace("%o ", pc - 2 * nn.val);
         }
         if (cmd[i].params & HAS_R) {
             r.val = (w & 07);
             w = w >> LEN_R;
             trace("R%o ", r.val);
-            if (cmd[i].params & HAS_NN) {
-                trace("%o", pc - 2 * nn.val);
-            }
+        }
+        if (cmd[i].params & HAS_XX) {
+            xx.val = (w & 0377);
+            trace("%o ", pc + xx.val * 2);
         }
         cmd[i].do_func();
         trace("\n");
