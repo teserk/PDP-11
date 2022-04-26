@@ -85,9 +85,29 @@ Arg get_modereg(word w) {
             res.val = w_read(res.adr);
             trace("@-(R%o) ", r);
             break;
-        default:
-            trace("mode %o not implemented yet", mode);
-            exit(1);
+        case 6: {
+            word shift = w_read(pc);
+            pc += 2;
+            res.adr = shift + reg[r];
+            res.val = w_read(res.adr);
+            if (r == 7)
+                trace("%o ", shift);
+            else
+                trace("%o(R%o) ", shift, r);
+            break;
+        }
+        case 7: {
+            word shift = w_read(pc);
+            pc += 2;
+            res.adr = shift + reg[r];
+            res.adr = w_read(res.adr);
+            res.val = w_read(res.adr);
+            if (r == 7)
+                trace("@%o ", shift);
+            else
+                trace("@%o(R%o) ", shift, r);
+            break;
+        }
     }
     return res;
 }
