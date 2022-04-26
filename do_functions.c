@@ -3,8 +3,10 @@
 #include "pdp11.h"
 
 Command cmd[] = {
-        {0070000, 0010000, "move", HAS_SS | HAS_DD, do_mov},
+        {0070000, 0010000, "mov", HAS_SS | HAS_DD, do_mov},
         {0170000, 0060000, "add", HAS_DD | HAS_SS, do_add},
+        {0177000, 0077000, "sob", HAS_R | HAS_NN, do_sob},
+        {0077700, 0005000, "clr", HAS_DD, do_clr},
         {0177777, 000000,  "halt", 0, do_halt},
         {0000000, 000000,  "unknown command", 0, do_nothing}
 };
@@ -95,20 +97,36 @@ void do_halt() {
 }
 
 void do_mov() {
-    w_write(dd.adr, ss.val);
+    if (b_flag.val) {
+        b_write(dd.adr, (byte) ss.val);
+    } else {
+        w_write(dd.adr, ss.val);
+    }
 }
-
 void do_add() {
     word res = dd.val + ss.val;
     w_write(dd.adr, res);
 }
 
 void do_nothing() {
-    trace("\n");
+    trace("unknown command\n");
     print_reg();
     exit(1);
 }
 
+void do_sob() {
+    if ( --reg[r.val] != 0) {
+        pc = pc - 2 * nn.val;
+    }
+}
+
+void do_clr() {
+    if (b_flag.val) {
+        b_write(dd.adr, 0);
+    } else {
+        w_write(dd.adr, 0);
+    }
+}
 
 void run() {
     trace("----------running----------\n");
@@ -122,7 +140,7 @@ void run() {
         while ((w & cmd[i].mask) != cmd[i].opcode) {
             i++;
         }
-        trace("%s ", cmd[i].name);
+        trace("%s   ", cmd[i].name);
         if (((w >> POSITION_B) == 1) && ((cmd[i].mask >> POSITION_B) == 0))
             b_flag.val = 1;
         else
@@ -135,6 +153,18 @@ void run() {
             w = w >> LEN_DD;
             if (cmd[i].params & HAS_SS) {
                 w = w >> LEN_SS;
+            }
+        }
+        if (cmd[i].params & HAS_NN) {
+            nn.val = (w & 077);
+            w = w >> LEN_NN;
+        }
+        if (cmd[i].params & HAS_R) {
+            r.val = (w & 07);
+            w = w >> LEN_R;
+            trace("R%o ", r.val);
+            if (cmd[i].params & HAS_NN) {
+                trace("%o", pc - 2 * nn.val);
             }
         }
         cmd[i].do_func();

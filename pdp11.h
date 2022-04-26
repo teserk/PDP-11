@@ -3,8 +3,12 @@
 #define pc reg[7]
 #define LEN_DD 6
 #define LEN_SS 6
+#define LEN_NN 6
+#define LEN_R 3
 #define HAS_SS (1<<1)
 #define HAS_DD (1)
+#define HAS_R (1<<3)
+#define HAS_NN (1<<2)
 #define POSITION_B 15
 #define LEN_BYTE 8
 #define LEN_WORD 16
@@ -34,6 +38,8 @@ void do_halt();
 void do_mov();
 void do_add();
 void do_nothing();
+void do_sob();
+void do_clr();
 void run();
 void trace(char * format, ...);
 byte b_read (adr a);
