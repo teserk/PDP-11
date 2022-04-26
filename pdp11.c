@@ -21,7 +21,14 @@ byte b_read (adr a) {
 }
 
 void b_write (adr a, byte val) {
-    mem[a] = val;
+    if (a > 7) {
+        mem[a] = val;
+    } else {
+        if (val >> (LEN_BYTE - 1))
+            reg[a] = val + 0xff00;
+        else
+            reg[a] = val;
+    }
 }
 
 word w_read(adr a) {
