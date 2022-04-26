@@ -20,6 +20,8 @@ Command cmd[] = {
         {0177777, 0000261, "sec", 0, do_sec},
         {0177400, 0000400, "br", HAS_XX, do_br},
         {0177400, 0001400, "beq", HAS_XX, do_beq},
+        {0177400, 0100000, "bpl", HAS_XX, do_bpl},
+        {0077700, 0005700, "tst", HAS_DD, do_tst},
         {0177777, 000000,  "halt", 0, do_halt},
         {0000000, 000000,  "unknown command", 0, do_nothing}
 };
@@ -113,6 +115,7 @@ void set_NZ(word val) {
 void do_halt() {
     trace("\n----------halted------------\n");
     print_reg();
+    printf("\n");
     exit(0);
 }
 
@@ -207,6 +210,16 @@ void do_br() {
 void do_beq() {
     if (Z_flag)
         do_br();
+}
+
+void do_bpl() {
+    if (!N_flag)
+        do_br();
+}
+
+void do_tst() {
+    if (w_read(dd.adr))
+        do_sen();
 }
 
 void run() {
