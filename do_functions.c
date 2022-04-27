@@ -89,7 +89,7 @@ Arg get_modereg(word w) {
             word shift = w_read(pc);
             pc += 2;
             res.adr = shift + reg[r];
-            res.val = w_read(res.adr);
+            res.val = w_read(res.adr);   //a(Rn)
             if (r == 7)
                 trace("%o ", shift);
             else
@@ -101,7 +101,7 @@ Arg get_modereg(word w) {
             pc += 2;
             res.adr = shift + reg[r];
             res.adr = w_read(res.adr);
-            res.val = w_read(res.adr);
+            res.val = w_read(res.adr);   //@a(Rn)
             if (r == 7)
                 trace("@%o ", shift);
             else
