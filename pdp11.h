@@ -1,6 +1,7 @@
 #ifndef MY_PDP_11_EMULATOR_DO_FUNCTIONS_H
 #define MY_PDP_11_EMULATOR_DO_FUNCTIONS_H
 #define pc reg[7]
+#define sp reg[6]
 #define LEN_DD 6
 #define LEN_SS 6
 #define LEN_NN 6
@@ -67,6 +68,8 @@ void do_beq();
 void do_bpl();
 
 void do_tst();
+void do_jsr();
+void do_rts();
 
 void run();
 void trace(char * format, ...);

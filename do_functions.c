@@ -22,6 +22,8 @@ Command cmd[] = {
         {0177400, 0001400, "beq", HAS_XX, do_beq},
         {0177400, 0100000, "bpl", HAS_XX, do_bpl},
         {0077700, 0005700, "tst", HAS_DD, do_tst},
+        {0174000, 0004000, "jsr", HAS_R | HAS_DD, do_jsr},
+        {0177270, 0000200, "rts", HAS_R, do_rts},
         {0177777, 000000,  "halt", 0, do_halt},
         {0000000, 000000,  "unknown command", 0, do_nothing}
 };
@@ -54,7 +56,7 @@ Arg get_modereg(word w) {
             else
                 reg[r] += 2;
             if (r == 7)
-                trace("#%o ", res.val);
+                trace("#%06o ", res.val);
             else
                 trace("(R%o)+ ", r);
             break;
@@ -242,6 +244,20 @@ void do_tst() {
         do_sen();
 }
 
+void do_jsr() {
+    word temp = dd.adr;
+    sp -= 2;
+    w_write(sp, reg[r.val]);
+    reg[r.val] = pc;
+    pc = temp;
+}
+
+void do_rts() {
+    pc = reg[r.val];
+    reg[r.val] = w_read(sp);
+    sp += 2;
+}
+
 void run() {
     trace("----------running----------\n");
     pc = 01000;
@@ -260,7 +276,7 @@ void run() {
         else
             b_flag.val = 0;
         if (cmd[i].params & HAS_SS) {
-            ss = get_modereg(w>>LEN_DD);
+            ss = get_modereg(w>>LEN_SS);
         }
         if (cmd[i].params & HAS_DD) {
             dd = get_modereg(w);
