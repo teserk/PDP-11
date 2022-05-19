@@ -64,6 +64,9 @@ void set_NZ(word val);
 
 void do_br();
 void do_beq();
+void do_bpl();
+
+void do_tst();
 
 void run();
 void trace(char * format, ...);

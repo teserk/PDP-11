@@ -12,8 +12,13 @@ word reg[8];
 Arg ss, dd, b_flag, r, nn, xx;
 char N_flag, Z_flag, V_flag, C_flag;
 int trace_flag = 0;
+word odata = 0177564;
+word oscr = 0177566;
+
 
 byte b_read (adr a) {
+    if (a == odata)
+        return 1;
     if (a <= 7)
         return (byte) reg[a];
     else
@@ -29,9 +34,13 @@ void b_write (adr a, byte val) {
         else
             reg[a] = val;
     }
+    if (a == oscr)
+        printf("%c", b_read(a));
 }
 
 word w_read(adr a) {
+    if (a == odata)
+        return 1;
     word w = ((word) mem[a + 1]) << LEN_BYTE;
     w = w | mem[a];
     return w;
@@ -44,6 +53,8 @@ void w_write (adr a, word val) {
         mem[a + 1] = (byte) (val >> LEN_BYTE);
         mem[a] = (byte) (val);
     }
+    if (a == oscr)
+        printf("%c", b_read(a));
 }
 
 void print_bin(unsigned char x, char end){
